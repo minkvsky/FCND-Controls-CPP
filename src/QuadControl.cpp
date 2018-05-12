@@ -101,9 +101,9 @@ V3F QuadControl::BodyRateControl(V3F pqrCmd, V3F pqr)
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
   V3F rateError = pqrCmd - pqr;
   V3F MOI(Ixx, Iyy, Izz);
-  momentCmd = MOI.operator*(kpPQR.dot(rateError));
+  momentCmd = MOI * (kpPQR.dot(rateError));
   float MAX_TORQUE = 1.0;
-  if (momentCmd.mag() > MAX_TORQUE) momentCmd.operator*=(MAX_TORQUE / momentCmd.mag());
+  if (momentCmd.mag() > MAX_TORQUE) momentCmd *= (MAX_TORQUE / momentCmd.mag());
 
 
   /////////////////////////////// END STUDENT CODE ////////////////////////////
@@ -224,10 +224,10 @@ V3F QuadControl::LateralPositionControl(V3F posCmd, V3F velCmd, V3F pos, V3F vel
   ////////////////////////////// BEGIN STUDENT CODE ///////////////////////////
 
   // V3F kp(kpPosXY, kpVelXY, 0)
-  V3F velocityCmd = operator*(kpPosXY, posCmd.operator-(pos));
+  V3F velocityCmd = kpPosXY * (posCmd - pos);
   float velocityNorm = velocityCmd.mag();
-  if (velocityNorm > maxSpeedXY) velocityCmd.operator*= (maxSpeedXY / velocityNorm);
-  accelCmd = operator*(kpPosXY, posCmd.operator-(pos)) + operator*(kpVelXY, velCmd.operator-(vel));
+  if (velocityNorm > maxSpeedXY) velocityCmd *= (maxSpeedXY / velocityNorm);
+  accelCmd = kpPosXY * (posCmd - pos) + kpVelXY * (velCmd - vel);
   float accelNorm = accelCmd.mag();
   if (accelNorm > maxAccelXY) accelCmd *= (maxAccelXY / accelNorm);
 
