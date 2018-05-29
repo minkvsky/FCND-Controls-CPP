@@ -41,18 +41,6 @@ Vehicles are created and graphs are reset whenever a scenario is loaded. When a 
 
 When the simulation is running, you can use the arrow keys on your keyboard to impact forces on your drone to see how your controller reacts to outside forces being applied.
 
-#### Keyboard / Mouse Controls ####
-
-There are a handful of keyboard / mouse commands to help with the simulator itself, including applying external forces on your drone to see how your controllers reacts!
-
- - Left drag - rotate
- - X + left drag - pan
- - Z + left drag - zoom
- - arrow keys - apply external force
- - C - clear all graphs
- - R - reset simulation
- - Space - pause simulation
-
 
 
 ## The Tasks ##
@@ -72,14 +60,13 @@ To accomplish this, you will:
 
 
 2. Implement roll / pitch control
-We won't be worrying about yaw just yet.
 
  - implement the code in the function [`RollPitchControl()`](src/QuadControl.cpp#L123-L171)
  - Tune `kpBank` in `QuadControlParams.txt` to minimize settling time but avoid too much overshoot
 
 
 <p align="center">
-<img src="images/scenario2.png" width="500"/>
+<img src="images/scenario2.png" width="700"/>
 </p>
 
 
@@ -92,13 +79,12 @@ Next, you will implement the position, altitude and yaw control for your quad.  
  - tune parameters `kpPosZ` and `kpPosZ`
  - tune parameters `kpVelXY` and `kpVelZ`
 
- - implement the code in the function `YawControl()`
+ - implement the code in the function [`YawControl()`](src/QuadControl.cpp#L264-L288)
  - tune parameters `kpYaw` and the 3rd (z) component of `kpPQR`
 
-Tune position control for settling time. Don’t try to tune yaw control too tightly, as yaw control requires a lot of control authority from a quadcopter and can really affect other degrees of freedom.  This is why you often see quadcopters with tilted motors, better yaw authority!
 
 <p align="center">
-<img src="images/scenario3.png" width="500"/>
+<img src="images/scenario3.png" width="700"/>
 </p>
 
 **Hint:**  For a second order system, such as the one for this quadcopter, the velocity gain (`kpVelXY` and `kpVelZ`) should be at least ~3-4 times greater than the respective position gain (`kpPosXY` and `kpPosZ`).
@@ -110,12 +96,11 @@ In this part, we will explore some of the non-idealities and robustness of a con
  - The orange vehicle is an ideal quad
  - The red vehicle is heavier than usual
 
-1. Run your controller & parameter set from Step 3.  Do all the quads seem to be moving OK?  If not, try to tweak the controller parameters to work for all 3 (tip: relax the controller).
 
-2. Edit `AltitudeControl()` to add basic integral control to help with the different-mass vehicle.
+- Edit `AltitudeControl()` to add basic integral control to help with the different-mass vehicle.
 
-3. Tune the integral control, and other control parameters until all the quads successfully move properly.  Your drones' motion should look like this:
+- Tune the integral control, and other control parameters until all the quads successfully move properly.  
 
 <p align="center">
-<img src="images/scenario4.png" width="500"/>
+<img src="images/scenario4.png" width="700"/>
 </p>
