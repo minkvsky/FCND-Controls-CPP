@@ -37,8 +37,8 @@ int randomNumCarry=-1;
 void OnTimer(int v);
 
 vector<QuadcopterHandle> CreateVehicles();
-// string _scenarioFile="../config/1_Intro.txt";
-string _scenarioFile="../config/2_AttitudeControl.txt";
+string _scenarioFile="../config/1_Intro.txt";
+// string _scenarioFile="../config/2_AttitudeControl.txt";
 // string _scenarioFile="../config/3_PositionControl.txt";
 
 #include "MavlinkNode/MavlinkNode.h"
