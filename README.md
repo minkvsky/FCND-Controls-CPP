@@ -97,9 +97,9 @@ In this part, we will explore some of the non-idealities and robustness of a con
  - The red vehicle is heavier than usual
 
 
-- Edit `AltitudeControl()` to add basic integral control to help with the different-mass vehicle.
+1. Edit `AltitudeControl()` to add basic integral control to help with the different-mass vehicle.
 
-- Tune the integral control, and other control parameters until all the quads successfully move properly.  
+2. Tune the integral control, and other control parameters until all the quads successfully move properly.  
 
 <p align="center">
 <img src="images/scenario4.png" width="700"/>
