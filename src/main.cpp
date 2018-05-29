@@ -38,6 +38,8 @@ void OnTimer(int v);
 
 vector<QuadcopterHandle> CreateVehicles();
 string _scenarioFile="../config/1_Intro.txt";
+// string _scenarioFile="../config/2_AttitudeControl.txt";
+// string _scenarioFile="../config/3_PositionControl.txt";
 
 #include "MavlinkNode/MavlinkNode.h"
 shared_ptr<MavlinkNode> mlNode;
@@ -45,7 +47,7 @@ shared_ptr<MavlinkNode> mlNode;
 int main(int argcp, char **argv)
 {
   PrintHelpText();
- 
+
   // load parameters
   ParamsHandle config = SimpleConfig::GetInstance();
 
@@ -64,9 +66,9 @@ int main(int argcp, char **argv)
   }
 
   LoadScenario(_scenarioFile);
- 
+
   glutTimerFunc(1,&OnTimer,0);
-  
+
   glutMainLoop();
 
   return 0;
@@ -103,7 +105,7 @@ void LoadScenario(string scenarioFile)
 
   mlNode.reset();
   if(config->Get("Mavlink.Enable",0)!=0)
-  { 
+  {
     mlNode.reset(new MavlinkNode());
   }
 
@@ -125,7 +127,7 @@ void ResetSimulation()
   simulationTime = 0;
   config->Reset(_scenarioFile);
   dtSim = config->Get("Sim.Timestep", 0.005f);
-  
+
   for (unsigned i = 0; i<quads.size(); i++)
   {
     quads[i]->Reset();
@@ -136,7 +138,7 @@ void ResetSimulation()
 void OnTimer(int)
 {
   ParamsHandle config = SimpleConfig::GetInstance();
-  
+
   // logic to reset the simulation based on key input or reset conditions
   float endTime = config->Get("Sim.EndTime",-1.f);
   if(receivedResetRequest ==true ||
@@ -144,9 +146,9 @@ void OnTimer(int)
   {
     ResetSimulation();
   }
-  
+
   visualizer->OnMainTimer();
-  
+
   // main loop
   if (!paused)
   {
@@ -160,9 +162,9 @@ void OnTimer(int)
     }
     grapher->UpdateData(simulationTime);
   }
-  
+
   KeyboardInteraction(force, visualizer);
-  
+
   if (lastDraw.ElapsedSeconds() > 0.030)
   {
     if (quads.size() > 0)
@@ -181,9 +183,9 @@ void OnTimer(int)
       mlNode->Send(MakeMavlinkPacket_LocalPose(simulationTime, quads[0]->Position(), quads[0]->Velocity()));
       mlNode->Send(MakeMavlinkPacket_Attitude(simulationTime, quads[0]->Attitude(), quads[0]->Omega()));
     }
-    
+
   }
-  
+
   glutTimerFunc(5,&OnTimer,0);
 }
 
@@ -204,7 +206,7 @@ vector<QuadcopterHandle> CreateVehicles()
       ret.push_back(q);
     }
     else
-    {		
+    {
       break;
     }
     i++;
