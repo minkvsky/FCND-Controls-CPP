@@ -2,67 +2,43 @@
 
 This is the readme for the C++ project.
 
-For easy navigation throughout this document, here is an outline:
-
- - [Development environment setup](#development-environment-setup)
- - [Simulator walkthrough](#simulator-walkthrough)
- - [The tasks](#the-tasks)
-
-
-
-## Simulator Walkthrough ##
-
-Now that you have all the code on your computer and the simulator running, let's walk through some of the elements of the code and the simulator itself.
-
-### The Code ###
-
-For the project, the majority of your code will be written in `src/QuadControl.cpp`.  This file contains all of the code for the controller that you will be developing.
-
-All the configuration files for your controller and the vehicle are in the `config` directory.  For example, for all your control gains and other desired tuning parameters, there is a config file called `QuadControlParams.txt` set up for you.  An import note is that while the simulator is running, you can edit this file in real time and see the affects your changes have on the quad!
-
-The syntax of the config files is as follows:
-
- - `[Quad]` begins a parameter namespace.  Any variable written afterwards becomes `Quad.<variablename>` in the source code.
- - If not in a namespace, you can also write `Quad.<variablename>` directly.
- - `[Quad1 : Quad]` means that the `Quad1` namespace is created with a copy of all the variables of `Quad`.  You can then overwrite those variables by specifying new values (e.g. `Quad1.Mass` to override the copied `Quad.Mass`).  This is convenient for having default values.
-
-You will also be using the simulator to fly some difference trajectories to test out the performance of your C++ implementation of your controller. These trajectories, along with supporting code, are found in the `traj` directory of the repo.
-
-
-### The Simulator ###
-
-In the simulator window itself, you can right click the window to select between a set of different scenarios that are designed to test the different parts of your controller.
-
-The simulation (including visualization) is implemented in a single thread.  This is so that you can safely breakpoint code at any point and debug, without affecting any part of the simulation.
-
-Due to deterministic timing and careful control over how the pseudo-random number generators are initialized and used, the simulation should be exactly repeatable. This means that any simulation with the same configuration should be exactly identical when run repeatedly or on different machines.
-
-Vehicles are created and graphs are reset whenever a scenario is loaded. When a scenario is reset (due to an end condition such as time or user pressing the ‘R’ key), the config files are all re-read and state of the simulation/vehicles/graphs is reset -- however the number/name of vehicles and displayed graphs are left untouched.
-
-When the simulation is running, you can use the arrow keys on your keyboard to impact forces on your drone to see how your controller reacts to outside forces being applied.
-
-
 
 ## The Tasks ##
 
 
 ### Body rate and roll/pitch control (scenario 2) ###
 
-First, you will implement the body rate and roll / pitch control.  For the simulation, you will use `Scenario 2`.  In this scenario, you will see a quad above the origin.  It is created with a small initial rotation speed about its roll axis.  Your controller will need to stabilize the rotational motion and bring the vehicle back to level attitude.
 
-To accomplish this, you will:
+#### Implement body rate control
 
-1. Implement body rate control
+##### implement the code in the function [`GenerateMotorCommands()`](src/QuadControl.cpp#L58-L94)
+  - induce the formula
 
- - implement the code in the function [`GenerateMotorCommands()`](src/QuadControl.cpp#L58-L94)
- - implement the code in the function [`BodyRateControl()`](src/QuadControl.cpp#L96-L120)
- - Tune `kpPQR` in `QuadControlParams.txt` to get the vehicle to stop spinning quickly but not overshoot
+##### implement the code in the function [`BodyRateControl()`](src/QuadControl.cpp#L96-L120)
+  - The commanded roll, pitch, and yaw are collected by the body rate controller, and they are translated into the desired rotational accelerations along the axis in the body frame.
+  - the fomula:
+    - $p_{\text{error}} = p_c - p$
+    - $\bar{u}_p= k_{p-p} p_{\text{error}}$
+    - $q_{\text{error}} = q_c - q$
+    - $\bar{u}_q= k_{p-q} q_{\text{error}}$
+    - $r_{\text{error}} = r_c - r$
+    - $\bar{u}_r= k_{p-r} r_{\text{error}}$
+
+##### Tune `kpPQR` in `QuadControlParams.txt`
+  - `kpPQR = 50, 50, 10`
 
 
-2. Implement roll / pitch control
+#### Implement roll / pitch control
 
- - implement the code in the function [`RollPitchControl()`](src/QuadControl.cpp#L123-L171)
- - Tune `kpBank` in `QuadControlParams.txt` to minimize settling time but avoid too much overshoot
+##### implement the code in the function [`RollPitchControl()`](src/QuadControl.cpp#L123-L171)
+
+- The roll-pitch controller is a P controller responsible for commanding the roll and pitch rates ($p_c$ and $q_c$) in the body frame. It sets the desired rate of change of the given matrix elements using a P controller.
+
+- $$
+\begin{pmatrix} p_c \\ q_c \\ \end{pmatrix}  = \frac{1}{R_{33}}\begin{pmatrix} R_{21} & -R_{11} \\ R_{22} & -R_{12} \end{pmatrix} \times \begin{pmatrix} \dot{b}^x_c \\ \dot{b}^y_c  \end{pmatrix}
+$$
+##### Tune `kpBank` in `QuadControlParams.txt`
+- kpBank = 15
 
 
 <p align="center">
@@ -72,15 +48,35 @@ To accomplish this, you will:
 
 ### Position/velocity and yaw angle control (scenario 3) ###
 
-Next, you will implement the position, altitude and yaw control for your quad.  For the simulation, you will use `Scenario 3`.  This will create 2 identical quads, one offset from its target point (but initialized with yaw = 0) and second offset from target point but yaw = 45 degrees.
 
- - implement the code in the function [`LateralPositionControl()`](src/QuadControl.cpp#L214-L261)
- - implement the code in the function [`AltitudeControl()`](src/QuadControl.cpp#L173-L211)
- - tune parameters `kpPosZ` and `kpPosZ`
- - tune parameters `kpVelXY` and `kpVelZ`
+##### implement the code in the function [`LateralPositionControl()`](src/QuadControl.cpp#L214-L261)
+  - The lateral controller will use a PD controller to command target values for elements of the drone's rotation matrix. The drone generates lateral acceleration by changing the body orientation which results in non-zero thrust in the desired direction. This will translate into the commanded rotation matrix elements $b^x_c$ and $b^y_c$.
+  - $$
+\begin{align}
+\ddot{x}_{\text{command}} &=  c b^x_c \\
+\ddot{x}_{\text{command}} &=  k^x_p(x_t-x_a) + k_d^x(\dot{x}_t - \dot{x}_a)+ \ddot{x}_t \\
+b^x_c &= \ddot{x}_{\text{command}}/c
+\end{align}
+$$
 
- - implement the code in the function [`YawControl()`](src/QuadControl.cpp#L264-L288)
- - tune parameters `kpYaw` and the 3rd (z) component of `kpPQR`
+##### implement the code in the function [`AltitudeControl()`](src/QuadControl.cpp#L173-L211)
+
+##### tune parameters `kpPosXY` and `kpPosZ`
+- `kpPosXY = 3`
+- `kpPosZ = 4`
+
+##### tune parameters `kpVelXY` and `kpVelZ`
+- `kpVelXY = 10`
+- `kpVelZ = 11`
+
+##### implement the code in the function [`YawControl()`](src/QuadControl.cpp#L264-L288)
+  - Control over yaw is decoupled from the other directions. A P controller is used to control the drone's yaw.
+  - $r_c = k_p (\psi_t - \psi_a)$
+
+##### tune parameters `kpYaw` and the 3rd (z) component of `kpPQR`
+  - `kpYaw = 2`
+  - `kpPQR = 50, 50, 10`
+
 
 
 <p align="center">
